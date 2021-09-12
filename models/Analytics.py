@@ -1,3 +1,4 @@
+import warnings ; warnings.filterwarnings("ignore", category=FutureWarning)
 import pandas as pd
 import tkinter.messagebox as messagebox
 
