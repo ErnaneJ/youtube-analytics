@@ -1,4 +1,4 @@
-import warnings ; warnings.filterwarnings("ignore", category=FutureWarning)
+import warnings ; warnings.filterwarnings("ignore", category=FutureWarning) # Remove o `Warning` referente a futura remocao do datetime do Pandas.
 import pandas as pd
 import tkinter.messagebox as messagebox
 
