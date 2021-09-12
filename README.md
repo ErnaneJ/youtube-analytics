@@ -30,7 +30,7 @@ Esta aplicação foi desenvolvida com as seguintes tecnologias:
 <p>
 Este projeto tem como objetivo fixar o estudo de Programação Orientada a Objetos tomando como base a linguagem Python, bem como, o padrão de projetos MVC (do inglês - model, view e conrollers). Dentre as suas funcionalidades, podemos contar com:
 
-- [x] Leitura da dados em arquivos tipo `.csv`
+- [x] Leitura de dados em arquivos tipo `.csv`
 
 <div align="center">
   <img alt="Preview" src=".github/files.png" width="50%">
@@ -66,7 +66,7 @@ Este projeto tem como objetivo fixar o estudo de Programação Orientada a Objet
 <div align="center">
   <img alt="Preview" src=".github/plot.png" width="50%">
 </div>
-O projeto consiste basicamente em um sistema analitico com interface visual desktop para dados do `Trending top` de videos do youtube em um arquivo `.csv`. Com base nesses dados o sistema, apos le-los, disponibiliza todas as funcoes citadas anteriormente para o usuario estudar os dados.
+O projeto consiste basicamente em um sistema analítico com interface visual desktop para dados do `Trending top` de vídeos do youtube em um arquivo `.csv`. Com base nisso, após o sistema ler esses dados, disponibiliza todas as funções citadas anteriormente para o usuário estudá-los.
 
 O mesmo também conta com tratamento de erros e exceções para que qualquer má utilização do sistema, vinda por parte do usuário, seja prevenida e lhe permita obter um retorno visual do erro, sendo utilizada a própria `GUI` (Graphical user interface) do sistema.
 </p>
