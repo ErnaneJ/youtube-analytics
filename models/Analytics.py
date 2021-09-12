@@ -21,111 +21,123 @@ class Video:
         return r
 
 class Analytics:            
-    def _df_para_lista(self, df):
-        data = [tup for tup in zip(df.id_video, df.titulo,
-                           df.dt_publicacao, df.id_canal,
-                           df.canal, df.dt_trending,
-                           df.cont_views, df.likes,
-                           df.dislikes, df.cont_comentarios,
-                           df.descricao, df.categoria)]
-        videos = list()
-        for tup in data:
-            videos.append(Video(tup))
-        return videos
+  def lista_categorias(self):
+    return list(self._dataframe.categoria.unique())
+
+  def busca_por_titulo(self, titulo):
+    filtro = self._dataframe.titulo.str.contains(titulo, case=False)
+    for i, el in enumerate(filtro):
+      if pd.isnull(float(el)):
+        filtro[i] = False
+    param = self._dataframe[filtro]
+
+    return self._df_para_lista(param)
+
+  def busca_por_canal(self, canal):
+    filtro = self._dataframe.canal.str.contains(canal, case=False)
+    for i, el in enumerate(filtro):
+      if pd.isnull(float(el)):
+        filtro[i] = False
+    param = self._dataframe[filtro]
+
+    return self._df_para_lista(param)
+
+  def busca_por_categoria(self, categoria):
+    filtro = self._dataframe.categoria.str.contains(categoria, case=False)
+    for i, el in enumerate(filtro):
+      if pd.isnull(float(el)):
+        filtro[i] = False
+    param = self._dataframe[filtro]
+
+    return self._df_para_lista(param)
+
+  def busca_por_periodo(self, ini, fim):
+    return self._df_para_lista(self._dataframe[(self._dataframe.dt_publicacao.dt.date >= pd.to_datetime(ini)) & (self._dataframe.dt_publicacao.dt.date <= pd.to_datetime(fim))])
+
+  def busca_todos(self):
+    return self._df_para_lista(self._dataframe)
+
+  def top(self, n, col):
+    if int(n) < 1: 
+      raise ValueError()
+    else:
+      return self._dataframe.sort_values(by=[col], ascending=False).head(int(n))
+
+  def ordenar(self, tv, col, reverse):
+    if tv.get_children('') != ():
+      print("╔════════════════════════════════════════════════════════════════════════════════════════════════╗")
+      print(f"                                    ORDENANDO POR {col.upper()}                                  ")
+      print("╚════════════════════════════════════════════════════════════════════════════════════════════════╝")
+      l = [(tv.set(k, col), k) for k in tv.get_children('')]
+      l.sort(reverse=reverse)
+
+      for index, (val, k) in enumerate(l):
+          tv.move(k, '', index)
+
+      tv.heading(col, command=lambda: self.ordenar(tv, col, not reverse))
+    else:
+      messagebox.showinfo(title="Sem dados", message="Voce precisa inserir dados para poder ordena-los.")
+      print("╔════════════════════════════════════════════════════════════════════════════════════════════════╗")
+      print(f"                                     SEM DADOS PARA ORDENAR                                      ")
+      print("╚════════════════════════════════════════════════════════════════════════════════════════════════╝")
+  
+  def clear(self, treeview):
+    treeview.delete(*treeview.get_children())
+      
+  def seleciona_arquivo(self, fd, root):
+    tipos_arq = (('Arquivos .csv', '*.csv'), ('Todos os arquivos', '*.*'))
     
-    def lista_categorias(self):
-        return list(self._dataframe.categoria.unique())
+    arquivo = fd.askopenfilename(
+      title='Abrir arquivo',
+      filetypes=tipos_arq)
+    title = ' '.join(arquivo.split('/')[len(arquivo.split('/'))-1].split('.')[0].split('_'))
+
+    self._dataframe = pd.read_csv(arquivo, lineterminator='\n')
     
-    def busca_por_titulo(self, titulo):
-        filtro = self._dataframe.titulo.str.contains(titulo, case=False)
-        for i, el in enumerate(filtro):
-              if pd.isnull(float(el)):
-                filtro[i] = False
-        param = self._dataframe[filtro]
-
-        return self._df_para_lista(param)
+    self._dataframe.dt_publicacao = pd.to_datetime(self._dataframe.dt_publicacao)
+    self._dataframe.dt_trending = pd.to_datetime(self._dataframe.dt_trending)
     
-    def busca_por_canal(self, canal):
-        filtro = self._dataframe.canal.str.contains(canal, case=False)
-        for i, el in enumerate(filtro):
-              if pd.isnull(float(el)):
-                filtro[i] = False
-        param = self._dataframe[filtro]
-    
-        return self._df_para_lista(param)
-    
-    def busca_por_categoria(self, categoria):
-        filtro = self._dataframe.categoria.str.contains(categoria, case=False)
-        for i, el in enumerate(filtro):
-              if pd.isnull(float(el)):
-                filtro[i] = False
-        param = self._dataframe[filtro]
+    print("╔════════════════════════════════════════════════════════════════════════════════════════════════╗")
+    print("║                                   INFORMAÇÔES DO ARQUIVO                                       ║")
+    print("╚════════════════════════════════════════════════════════════════════════════════════════════════╝")
+    print("╔════════════════════════════════════════════════════════════════════════════════════════════════╗")
+    print(f"║ ARQUIVO: {title}")  
+    print("╠════════════════════════════════════════════════════════════════════════════════════════════════╣")      
+    print("║ Possui dados dos vídeos em tendência no Youtube BR                                             ║")
+    print("╠════════════════════════════════════════════════════════════════════════════════════════════════╣")
+    print(f"║ TOTAL DE VIDEOS: {len(self._dataframe)}")  
+    print("╠════════════════════════════════════════════════════════════════════════════════════════════════╣")      
+    print(f"║ PERIODO: {self._dataframe.dt_publicacao.min()} até {self._dataframe.dt_publicacao.max()}")
+    print("╠════════════════════════════════════════════════════════════════════════════════════════════════╣")
+    print("║ DADOS DOS VIDEOS:")
+    for c in self._dataframe.columns.to_list():
+        print(f"║ {c}")
+    print("╚════════════════════════════════════════════════════════════════════════════════════════════════╝")
 
-        return self._df_para_lista(param)
-    
-    def busca_por_periodo(self, ini, fim):
-        return self._df_para_lista(self._dataframe[(self._dataframe.dt_publicacao.dt.date >= pd.to_datetime(ini)) & (self._dataframe.dt_publicacao.dt.date <= pd.to_datetime(fim))])
-    
-    def busca_todos(self):
-        return self._df_para_lista(self._dataframe)
+    return title
 
-    def top(self, n, col):
-        if int(n) < 1: 
-            raise ValueError()
-        else:
-            return self._dataframe.sort_values(by=[col], ascending=False).head(int(n))
+  def _df_para_lista(self, df):
+    data = [
+      tup for tup in zip( 
+        df.id_video, 
+        df.titulo,
+        df.dt_publicacao, 
+        df.id_canal,
+        df.canal, 
+        df.dt_trending,
+        df.cont_views, 
+        df.likes,
+        df.dislikes, 
+        df.cont_comentarios,
+        df.descricao, 
+        df.categoria
+      )
+    ]
+    videos = list()
+    for tup in data:
+      videos.append(Video(tup))
+    return videos
 
-    def ordenar(self, tv, col, reverse):
-        if tv.get_children('') != ():
-            print("╔════════════════════════════════════════════════════════════════════════════════════════════════╗")
-            print(f"                                    ORDENANDO POR {col.upper()}                                  ")
-            print("╚════════════════════════════════════════════════════════════════════════════════════════════════╝")
-            l = [(tv.set(k, col), k) for k in tv.get_children('')]
-            l.sort(reverse=reverse)
-
-            for index, (val, k) in enumerate(l):
-                tv.move(k, '', index)
-
-            tv.heading(col, command=lambda: self.ordenar(tv, col, not reverse))
-        else:
-            messagebox.showinfo(title="Sem dados", message="Voce precisa inserir dados para poder ordena-los.")
-            print("╔════════════════════════════════════════════════════════════════════════════════════════════════╗")
-            print(f"                                     SEM DADOS PARA ORDENAR                                      ")
-            print("╚════════════════════════════════════════════════════════════════════════════════════════════════╝")
-    def clear(self, treeview):
-        treeview.delete(*treeview.get_children())
-        
-    def seleciona_arquivo(self, fd, root):
-        tipos_arq = (('Arquivos .csv', '*.csv'), ('Todos os arquivos', '*.*'))
-        
-        arquivo = fd.askopenfilename(
-            title='Abrir arquivo',
-            filetypes=tipos_arq)
-        title = ' '.join(arquivo.split('/')[len(arquivo.split('/'))-1].split('.')[0].split('_'))
-
-        self._dataframe = pd.read_csv(arquivo, lineterminator='\n')
-        
-        self._dataframe.dt_publicacao = pd.to_datetime(self._dataframe.dt_publicacao)
-        self._dataframe.dt_trending = pd.to_datetime(self._dataframe.dt_trending)
-        
-        print("╔════════════════════════════════════════════════════════════════════════════════════════════════╗")
-        print("║                                   INFORMAÇÔES DO ARQUIVO                                       ║")
-        print("╚════════════════════════════════════════════════════════════════════════════════════════════════╝")
-        print("╔════════════════════════════════════════════════════════════════════════════════════════════════╗")
-        print(f"║ ARQUIVO: {title}")  
-        print("╠════════════════════════════════════════════════════════════════════════════════════════════════╣")      
-        print("║ Possui dados dos vídeos em tendência no Youtube BR                                             ║")
-        print("╠════════════════════════════════════════════════════════════════════════════════════════════════╣")
-        print(f"║ TOTAL DE VIDEOS: {len(self._dataframe)}")  
-        print("╠════════════════════════════════════════════════════════════════════════════════════════════════╣")      
-        print(f"║ PERIODO: {self._dataframe.dt_publicacao.min()} até {self._dataframe.dt_publicacao.max()}")
-        print("╠════════════════════════════════════════════════════════════════════════════════════════════════╣")
-        print("║ DADOS DOS VIDEOS:")
-        for c in self._dataframe.columns.to_list():
-            print(f"║ {c}")
-        print("╚════════════════════════════════════════════════════════════════════════════════════════════════╝")
-
-        return title
 if __name__ == '__main__':
     print('\n.::Base de Dados: ')
     path = f"{__file__.replace('models/Analytics.py','data/')}"
