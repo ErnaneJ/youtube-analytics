@@ -274,8 +274,6 @@ class Analytics_Controller():
     try:
       anoI, mesI, diaI = dataI.split('-')
       anoF, mesF, diaF = dataF.split('-')
-      print(datetime(int(anoI), int(mesI), int(diaI)))
-      print(datetime(int(anoF), int(mesF), int(diaF)))
       return True
     except:
       messagebox.showwarning(title='Data Invalida', message='O conjunto de datas inserido nao e valido.')
