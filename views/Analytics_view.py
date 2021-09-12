@@ -27,7 +27,7 @@ class Analytics_View:
     self._frames = {}
 
     self._create()
-    self.tema()
+    self._tema()
     self._load()
 
   def insertDataTreeView(self, data):
@@ -158,7 +158,7 @@ class Analytics_View:
     self._sb_y.grid(row=0, column=1, sticky='ns')
     self._sb_x.grid(row=1, column=0, sticky='we')
 
-  def tema(self):
+  def _tema(self):
     self.__root.tk.call("set_theme", "light")
 
     for el in self._inputs:

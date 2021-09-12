@@ -5,6 +5,7 @@ import tkinter.filedialog as fd
 import tkinter.messagebox as messagebox
 import matplotlib.pyplot as plt
 import seaborn as sns
+import re
 
 class Analytics_Controller():
   def __init__(self):
@@ -14,6 +15,7 @@ class Analytics_Controller():
     self._model = None
     self._view = None
     self._temp_index = None
+    self._key = tk.StringVar()
 
   def initialize(self, model, view):
     self._model = model
@@ -28,6 +30,8 @@ class Analytics_Controller():
     return self._root
 
   def _setsUp(self):
+    self._root.bind('<Any-KeyPress>', self._keypress)
+
     self._view._botoes['Arquivo']['command'] = lambda: self._processa_selecao()
     self._view._botoes['Limpar']['command'] = lambda: self._limpa_filtros()
     self._view._botoes['Plotar']['command'] = lambda: self._plotar_grafico()
@@ -36,7 +40,7 @@ class Analytics_Controller():
     self._view._stringVars['Canal'].trace('w', lambda nm, idx, mode, var=self._view._stringVars['Canal']:self._processa_busca('Canal', self._view._stringVars['Canal']))
     self._view._stringVars['Inicio'].trace('w', lambda nm, idx, mode, var=self._view._stringVars['Inicio']:self._processa_busca('Inicio'))
     self._view._stringVars['Fim'].trace('w', lambda nm, idx, mode, var=self._view._stringVars['Fim']:self._processa_busca('Fim'))
-    
+
     self._view._comboboxes['TipoGrafico'].bind('<<ComboboxSelected>>', self._define_tipo_grafico)
     self._view._comboboxes['Categoria'].bind('<<ComboboxSelected>>', self._processa_categoria)
     
@@ -159,6 +163,7 @@ class Analytics_Controller():
       print("╚════════════════════════════════════════════════════════════════════════════════════════════════╝")
   
   def _limpa_filtros(self):
+    self._model.clear(self._view._treeview)
     self._view._inputs['Video'].delete(0, 'end')
     self._view._inputs['Video'].config(state=tk.NORMAL)
     self._view._labels['Video'].config(state=tk.NORMAL)
@@ -179,7 +184,6 @@ class Analytics_Controller():
     self._view._comboboxes['Categoria'].config(state=tk.NORMAL)
     self._view._labels['Categoria'].config(state=tk.NORMAL)
 
-    self._model.clear(self._view._treeview)
     self._view.insertDataTreeView(self._model.busca_todos())
 
   def _processa_busca(self, tipo, stringVar = None):
@@ -194,27 +198,45 @@ class Analytics_Controller():
       self._view._labels['Inicio'].config(state=tk.DISABLED)
       self._view._labels['Fim'].config(state=tk.DISABLED)
       self._view._labels['Categoria'].config(state=tk.DISABLED)
+      if stringVar.get() == "" : self._limpa_filtros()
     elif tipo == 'Canal':
       self._view.insertDataTreeView(self._model.busca_por_canal(stringVar.get()))
       self._view._inputs['Video'].config(state=tk.DISABLED)
       self._view._inputs['Inicio'].config(state=tk.DISABLED)
       self._view._inputs['Fim'].config(state=tk.DISABLED)
       self._view._comboboxes['Categoria'].config(state=tk.DISABLED)
-      self._view.labels['Video'].config(state=tk.DISABLED)
-      self._view.labels['Inicio'].config(state=tk.DISABLED)
-      self._view.labels['Fim'].config(state=tk.DISABLED)
+      self._view._labels['Video'].config(state=tk.DISABLED)
+      self._view._labels['Inicio'].config(state=tk.DISABLED)
+      self._view._labels['Fim'].config(state=tk.DISABLED)
       self._view._labels['Categoria'].config(state=tk.DISABLED)
+      if stringVar.get() == "" : self._limpa_filtros()
     elif tipo == 'Inicio' or tipo == 'Fim': 
+      self._format(tipo)
       if self._validaData():
-          self._view.insertDataTreeView(self._model.busca_por_periodo(self._view._stringVars['Inicio'].get(), self._view._stringVars['Fim'].get()))
-          self._view._inputs['Video'].config(state=tk.DISABLED)
-          self._view._inputs['Canal'].config(state=tk.DISABLED)
-          self._view._comboboxes['Categoria'].config(state=tk.DISABLED)
-          self._view._labels['Video'].config(state=tk.DISABLED)
-          self._view._labels['Canal'].config(state=tk.DISABLED)
-          self._view._labels['Categoria'].config(state=tk.DISABLED)
+        self._model.clear(self._view._treeview)
+        self._view.insertDataTreeView(self._model.busca_por_periodo(self._view._stringVars['Inicio'].get(), self._view._stringVars['Fim'].get()))
+        self._view._inputs['Video'].config(state=tk.DISABLED)
+        self._view._inputs['Canal'].config(state=tk.DISABLED)
+        self._view._comboboxes['Categoria'].config(state=tk.DISABLED)
+        self._view._labels['Video'].config(state=tk.DISABLED)
+        self._view._labels['Canal'].config(state=tk.DISABLED)
+        self._view._labels['Categoria'].config(state=tk.DISABLED)
       else: self._view.insertDataTreeView(self._model.busca_todos())
+      if (self._view._stringVars['Inicio'].get() == "" and self._view._stringVars['Fim'].get() == "") : self._limpa_filtros()
   
+  def _format(self, input):
+    self._view._stringVars[input].set(re.sub('[^0-9|-]','',self._view._stringVars[input].get()))
+    if self._key.get() != 'BackSpace':
+      if  len(self._view._stringVars[input].get()) > 10: self._view._stringVars[input].set(self._view._stringVars[input].get()[:-1])
+      
+      txt = ''.join(self._view._stringVars[input].get().split('-'))
+      self._view._stringVars[input].set('')
+      self._view._stringVars[input].set('{}-{}-{}'.format(txt[:4], txt[4:6], txt[6:8]))
+      
+      if txt == '' : self._view._stringVars[input].set(txt)
+      self._view._inputs[input].icursor(self._view._inputs[input].index(tk.END))
+        
+
   def _validaData(self):
     dataI = self._view._stringVars['Inicio'].get()
     dataF = self._view._stringVars['Fim'].get()
@@ -234,6 +256,9 @@ class Analytics_Controller():
       print("╚════════════════════════════════════════════════════════════════════════════════════════════════╝")
       return False
   
+  def _keypress(self, event = None): 
+    self._key.set(event.keysym)
+
   def creditos(self):
     print("\n\n╔════════════════════════════════════════════════════════════════════════════════════════════════╗")
     print("║                                     OBRIGADO POR UTILIZAR! :)                                  ║")  
